@@ -20,15 +20,16 @@ export function getAppPathway() {
 export async function checkForUpdate() {
   try {
     const rpc = await store.get('rpc');
-    if (rpc.arbitrum === undefined || (!rpc.arbitrum.includes('publicnode'))) {
+    if (rpc.version === undefined) {
       store.set('rpc', {
-        "ethereum": "https://ethereum-rpc.publicnode.com",
-        "binance": "https://bsc-rpc.publicnode.com",
-        "avalanche": "https://avalanche-c-chain-rpc.publicnode.com",
-        "arbitrum": "https://arbitrum-one-rpc.publicnode.com",
-        "optimism": "https://optimism-rpc.publicnode.com",
-        "fantom": "https://fantom-rpc.publicnode.com",
-        "polygon": "https://lb.nodies.app/v1/975f16c52f5f4732b20b6692137eec17",
+        "ethereum": null,
+        "binance": null,
+        "avalanche": null,
+        "arbitrum": null,
+        "optimism": null,
+        "fantom": null,
+        "polygon": "https://polygon-rpc.com",
+        "version": "1.0.0"
       });
     }
 

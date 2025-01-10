@@ -1,6 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 const PermissionItem = (props) => {
+
+    useEffect(() => {
+        if (props.disable) {
+            setTimeout(() => {
+                
+                props.setDisable(false)
+
+            },500)
+        }
+    }, [props.disable])
     return (
         <div className='permission-page'>
             <div className='permission-modal'>

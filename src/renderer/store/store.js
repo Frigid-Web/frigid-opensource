@@ -3,6 +3,8 @@ import networkSlice from './schemas/networkSlice';
 import authSlice from './schemas/authSlice';
 import loadingSlice from './schemas/loadingSlice';
 import chainSlice from './schemas/chainSlice';
+import hueSlice from './schemas/hueSlice';
+
 
 export const store = configureStore({
   reducer: {
@@ -10,7 +12,9 @@ export const store = configureStore({
       authSlice: authSlice,
       networkSlice: networkSlice,
       loadingSlice: loadingSlice,
-      chainSlice: chainSlice
+      chainSlice: chainSlice,
+      hueSlice: hueSlice
+
     })
   },
 });

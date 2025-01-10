@@ -29,6 +29,7 @@ let serverHttps = null;
 
 let localWs = null;
 
+
 if (process.env.NODE_ENV == 'development') {
     localWs = new WebSocket.Server({ noServer: true });
 }
@@ -38,18 +39,18 @@ let manageNetworkSwitchInterval = null;
 
 export const manageNetworkSwitch = async (ipcMain) => {
     if (manageNetworkSwitchInterval != null) clearInterval(manageNetworkSwitchInterval);
-    
+
     manageNetworkSwitchInterval = setInterval(async () => {
         try {
             const results = await fetch('http://ping.frigid');
             if (results.status != 200) {
-                dialog.showMessageBox({message: "Frigid network closed due to network conditions.", title: "Frigid Network Closed"})
+                dialog.showMessageBox({ message: "Frigid network closed due to network conditions.", title: "Frigid Network Closed" })
 
                 ipcMain.reply('network-status', 'off');
                 cleanup();
             }
         } catch (error) {
-            dialog.showMessageBox({message: "Frigid network closed due to network conditions.", title: "Frigid Network Closed"})
+            dialog.showMessageBox({ message: "Frigid network closed due to network conditions.", title: "Frigid Network Closed" })
 
             ipcMain.reply('network-status', 'off');
             cleanup();
@@ -123,12 +124,12 @@ pingPongServer.use(async (req, res, next) => {
         return;
     }
     if (domainSuffix === 'frigid') {
-       
+
         switch (host) {
             case 'ping.frigid': pingPongFrigid(req, res, next); break;
             default: break;
         }
-    } 
+    }
     return;
 });
 
@@ -142,7 +143,7 @@ export const startServers = async () => {
             serverHttp.on('upgrade', routeWebsocketRequest);
         }
     }
-    else{
+    else {
         if (!serverHttp) {
             serverHttp = http.createServer(pingPongServer).listen(PORT_HTTP, () => {
                 console.log(`HTTP Server running on port ${PORT_HTTP}`);
@@ -170,7 +171,7 @@ export const startServers = async () => {
                 if (!certDetails) {
                     throw new Error(`Failed to generate certificate for domain: ${domain}`);
                 }
-                const ctx = tls.createSecureContext({ key: certDetails.key, cert: certDetails.cert});
+                const ctx = tls.createSecureContext({ key: certDetails.key, cert: certDetails.cert });
                 cb(null, ctx);
             }
         };

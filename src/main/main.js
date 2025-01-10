@@ -12,6 +12,10 @@ import { checkIfRootCAExistsInRegistry, checkIfRootCAFileExists } from './certif
 import { checkDnsIsSet } from './dnsManagement/checkDns';
 import { createDNSControllerMac, createDNSControllerTask, resetDNSEntries, setLocalhostAsPrimaryDNS } from './dnsManagement/dns2';
 import Store from 'electron-store';
+import fsSync from 'fs'
+
+
+
 
 const schema = {
   "rpc": {
@@ -26,7 +30,11 @@ const schema = {
       "fantom": "https://fantom-rpc.publicnode.com",
       "polygon": "https://polygon-bor-rpc.publicnode.com",
     }
-  }
+  },
+  "onboardingStatus": {
+    type: "boolean",
+    default: false
+  },
 }
 
 export const store = new Store({ schema });
@@ -37,6 +45,9 @@ ipcMain.on('electron-store-get', async (event, val) => {
 ipcMain.on('electron-store-set', async (event, key, val) => {
   store.set(key, val);
 });
+
+
+
 
 ipcMain.on('native', async (event, data) => {
   const { event: eventName, data: eventData } = data;
@@ -62,7 +73,7 @@ ipcMain.on('native', async (event, data) => {
       const installCABool = await initializeAndInstallRootCA();
       if (installCABool) {
         event.reply('rootCAInitialized', 'true');
-      } else {
+      } else if (installCABool === false) {
         event.reply('rootCAInitialized', 'false');
       }
       break;
@@ -86,6 +97,9 @@ ipcMain.on('native', async (event, data) => {
           return;
         }
 
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+
+
         await checkForUpdate();
         await startServers();
 
@@ -96,7 +110,11 @@ ipcMain.on('native', async (event, data) => {
         event.reply('network-status', 'off');
       }
       break;
-
+    case "getStatusForConfiguration":
+      const certificateStatus = await checkIfRootCAExistsInRegistry() && await checkIfRootCAFileExists();
+      const dnsStatus = await setLocalhostAsPrimaryDNS()
+      event.reply('configuration-status', JSON.stringify({ certificateStatus, dnsStatus }));
+      break;
     default:
       break;
   }
@@ -154,7 +172,7 @@ const createWindow = async () => {
   mainWindow = new BrowserWindow({
     show: false,
     width: 640,
-    height: 670,
+    height: 680,
     icon: getAssetPath('icon.png'),
     webPreferences: {
       preload: app.isPackaged
@@ -163,8 +181,8 @@ const createWindow = async () => {
       webviewTag: true,
       devTools: true,
     },
-    minWidth: 540,
-    minHeight: 600,
+    minWidth: 640,
+    minHeight: 680,
     title: "Frigid",
     titleBarStyle: 'hidden',
     titleBarOverlay: {
@@ -245,3 +263,13 @@ app
     });
   })
   .catch(console.log);
+
+var link;
+app.on('open-url', function (event, data) {
+  event.preventDefault();
+  link = data;
+});
+
+app.setAsDefaultProtocolClient('frigid');
+
+export const getLink = () => link;

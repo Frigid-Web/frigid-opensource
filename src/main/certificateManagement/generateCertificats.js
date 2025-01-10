@@ -7,15 +7,17 @@ import os from 'os';
 import { v4 as uuidv4 } from 'uuid';
 import { store } from '../main';
 import { getAppPathway } from '../util';
+import { randomUUID } from 'crypto';
+import { checkIfRootCAExistsInRegistry, checkIfRootCAFileExists } from './checkCertificates';
 const { dialog } = require('electron')
-
+const { exec } = require('child_process');
 let pathway;
 
 if (process.env.NODE_ENV === 'development') {
     pathway = __dirname;
   } 
 else {
-    pathway =  getAppPathway() + '/../../'
+    pathway =  path.resolve(getAppPathway() + '/../../')
 }
 
 const certPath = path.join(pathway , 'certificates');
@@ -28,8 +30,15 @@ const createContractsDirectory = async () => {
     }
 }
 
+let certificateInterval = null;
+let certificateTimeout = null;
+let certificateResolve = null
+
 export async function initializeAndInstallRootCA() {
     try {
+        if(fsSync.existsSync(certPath)){
+            await fs.rmdir(certPath, { recursive: true });
+        }
         await createContractsDirectory()
         const certFilePath = path.join(certPath, 'rootCA.pem');
         const keyFilePath = path.join(certPath, 'rootCA.key');
@@ -39,16 +48,23 @@ export async function initializeAndInstallRootCA() {
         if (certNeedsRenewal) {
             const keys = forge.pki.rsa.generateKeyPair(2048);
 
+            // Create a Certificate
             const cert = forge.pki.createCertificate();
             cert.publicKey = keys.publicKey;
             cert.serialNumber = uuidv4().replace(/-/g, '').toUpperCase();
+            
+            // Set Validity Period (10 years)
             cert.validity.notBefore = new Date();
             cert.validity.notAfter = new Date();
-            cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 100); // Valid for 10 years
-            let caName = 'FrigidCA'
-            if(process.env.NODE_ENV === 'development'){
-                caName = 'FrigidCAev'
+            cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 10);
+            
+            // Set CA Name
+            let caName = 'FrigidCA';
+            if (process.env.NODE_ENV === 'development') {
+                caName = 'FrigidCAev';
             }
+            
+            // Set Certificate Subject and Issuer
             const attrs = [
                 { name: 'commonName', value: caName },
                 { name: 'countryName', value: 'US' },
@@ -57,10 +73,10 @@ export async function initializeAndInstallRootCA() {
                 { name: 'organizationName', value: 'Frigid' },
                 { shortName: 'OU', value: 'Frigid' }
             ];
-
             cert.setSubject(attrs);
             cert.setIssuer(attrs);
-
+            
+            // Add Extensions
             cert.setExtensions([
                 {
                     name: 'basicConstraints',
@@ -69,11 +85,17 @@ export async function initializeAndInstallRootCA() {
                 },
                 {
                     name: 'keyUsage',
+                    digitalSignature: true,
+                    keyEncipherment: true, // Add keyEncipherment
                     keyCertSign: true,
                     cRLSign: true,
-                    critical: true
+                    critical: false // Make non-critical
+                },
+                {
+                    name: 'subjectKeyIdentifier'
                 }
             ]);
+            
             
             // Sign the certificate with the private key using SHA-256
             cert.sign(keys.privateKey, forge.md.sha256.create());
@@ -89,15 +111,13 @@ export async function initializeAndInstallRootCA() {
             await fs.writeFile(keyFilePath, pemKey);
 
             let installCommand = ''
+          
             switch (os.platform()) {
                 case 'linux':
                     // await changeDNSLinux(originalDNSServers);
                     break;
                 case 'win32':
-                    let caName = 'FrigidCA'
-                    if(process.env.NODE_ENV === 'development'){
-                        caName = 'FrigidCAev'
-                    }
+                    
                     installCommand = `certutil -delstore "Root" "${caName}" && certutil -addstore "Root" "${certFilePath}"`;
                     await new Promise((success, fail) => {
                         sudo.exec(installCommand, { name: 'Frigid' }, (error, stdout, stderr) => {
@@ -111,23 +131,96 @@ export async function initializeAndInstallRootCA() {
                   
                     break;
                 case 'darwin':
+                    if(certificateInterval != null){
+                        clearInterval(certificateInterval);
+                        clearTimeout(certificateTimeout);
+                        certificateResolve(null)
+                    }
+
                     const tmpCertPath = '/tmp/rootCA.pem';
                     await fs.copyFile(certFilePath, tmpCertPath);
-                    installCommand = `
-                        security authorizationdb write com.apple.trust-settings.admin allow;
-                        security add-trusted-cert -d -r trustRoot -k "/Library/Keychains/System.keychain" "/tmp/rootCA.pem";
-                        security authorizationdb remove com.apple.trust-settings.admin
-                    `;
+                    let config = `
+                    <?xml version="1.0" encoding="UTF-8"?>
+                        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" 
+                        "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+                        <plist version="1.0">
+                        <dict>
+                            <key>PayloadContent</key>
+                            <array>
+                            <dict>
+                                <key>PayloadCertificateFileName</key>
+                                <string>frigid_rootCA.pem</string>
+                                <key>PayloadContent</key>
+                                <data>
+                                ${fsSync.readFileSync(tmpCertPath).toString('base64')}
+                                </data>
+                                <key>PayloadDescription</key>
+                                <string>Installs the Frigid root certificate to enable access to web3 websites</string>
+                                <key>PayloadDisplayName</key>
+                                <string>Frigid ${caName == 'FrigidCA' ? '' : 'Dev '}Root CA Certificate</string>
+                                <key>PayloadIdentifier</key>
+                                <string>com.frigid.rootca</string>
+                                <key>PayloadType</key>
+                                <string>com.apple.security.root</string>
+                                <key>PayloadUUID</key>
+                                <string>${randomUUID() }</string>
+                                <key>PayloadVersion</key>
+                                <integer>1</integer>
+                            </dict>
+                            </array>
+                            <key>PayloadDisplayName</key>
+                            <string>Frigid ${caName == 'FrigidCA' ? '' : 'Dev '}Root Certificate</string>
+                            <key>PayloadIdentifier</key>
+                            <string>com.frigid.trustedcerts</string>
+                            <key>PayloadRemovalDisallowed</key>
+                            <false/>
+                            <key>PayloadType</key>
+                            <string>Configuration</string>
+                            <key>PayloadUUID</key>
+                            <string>${randomUUID() }</string>
+                            <key>PayloadVersion</key>
+                            <integer>1</integer>
+                        </dict>
+                        </plist>
+                    `
+                    fsSync.writeFileSync('/tmp/frigidRootCa.mobileconfig', config);
+        
+
                     await new Promise((success, fail) => {
-                        sudo.exec(installCommand, { name: 'Frigid' }, (error, stdout, stderr) => {
-                            if (error) throw error;
-                            if (stderr) console.error(`stderr: ${stderr}`);
+                        exec(`open /tmp/frigidRootCa.mobileconfig; open /System/Library/PreferencePanes/Profiles.prefPane`, (error, stdout, stderr) => {
+                            if (error) {
+                                console.error(`exec error: ${error}`);
+                                return;
+                            }
                             console.log(`stdout: ${stdout}`);
-                            console.log("New Root CA installed successfully.");
-                            success('succes')
+                            console.error(`stderr: ${stderr}`);
+                            success()
                         });
                     })
-                    await fs.unlink('/tmp/rootCA.pem');
+                    fsSync.unlinkSync('/tmp/rootCA.pem');
+
+                    let value = await new Promise((resolve) => {
+                        certificateResolve = resolve
+                        certificateTimeout = setTimeout(() => {
+                            clearInterval(certificateInterval);
+                            certificateResolve(null)
+                          }, 5 * 60 * 1000) 
+
+                        certificateInterval = setInterval(async () => {
+                          if (await checkIfRootCAExistsInRegistry() && await checkIfRootCAFileExists()) {
+                            fsSync.unlinkSync('/tmp/frigidRootCa.mobileconfig');
+              
+                            clearTimeout(certificateTimeout);
+                            clearInterval(certificateInterval);
+                            certificateResolve(true)
+                          }
+                        }, 2000)
+                        
+              
+                      })
+                      return value
+                   
+                    
                     break;
                 default:
                     console.log('Unsupported platform:', os.platform());
@@ -136,7 +229,7 @@ export async function initializeAndInstallRootCA() {
         }
         return true
     } catch (error) {
-        // console.error('Failed to initialize and install root CA:', error);
+        console.error('Failed to initialize and install root CA:', error);
         return false
     }
 }

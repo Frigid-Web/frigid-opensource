@@ -1,9 +1,12 @@
 import React, { useEffect } from 'react';
 import PermissionItem from './permissionItem';
 import { useSelector } from 'react-redux';
+import B_DNS from '../network/boards/b_dns';
+import B_Profile from '../network/boards/b_profile';
+import { useNavigate } from 'react-router-dom';
 
 const Permission = (props) => {
-
+    const navigate = useNavigate();
     const [dnsPermission, setDnsPermission] = React.useState(props.dns || true)
     const [certificatePermission, setCertificatePermission] = React.useState(props.ca || true)
     const [disable, setDisable] = React.useState(props.disable || false)
@@ -21,9 +24,11 @@ const Permission = (props) => {
         const handleCA = (data) => {
             if (data == 'false') {
                 setCertificatePermission(false)
+                navigate('/?background=false')
             }
             else {
                 setCertificatePermission(true)
+                navigate('/')
                 window.electron.ipcRenderer.sendMessage('native', 'toggleNetwork', networkActive ? 'turn-off' : 'turn-on')
             }
             setDisable(false)
@@ -32,9 +37,12 @@ const Permission = (props) => {
         const handleDNS = (data) => {
             if (data == 'false') {
                 setDnsPermission(false)
+                navigate('/?background=false')
             }
             else {
                 setDnsPermission(true)
+                navigate('/')
+
                 window.electron.ipcRenderer.sendMessage('native', 'toggleNetwork', networkActive ? 'turn-off' : 'turn-on')
             }
             setDisable(false)
@@ -58,7 +66,8 @@ const Permission = (props) => {
             {
                 dnsPermission ? null : <div className='permission-gateway'>
                     {
-                        <PermissionItem disable={disable} setDisable={setDisable} permissionFunc={updateDNSPermission} title={'Adjust Your DNS Configuration'} desc={'This gives your machine the ability to load web3 Frigid Domains that provide web3 content.'} icon={'build_circle'} />
+                        <B_DNS permissionFunc={updateDNSPermission} />
+                        // <PermissionItem disable={disable} setDisable={setDisable} permissionFunc={updateDNSPermission} title={'Adjust Your DNS Configuration'} desc={'This gives your machine the ability to load web3 Frigid Domains that provide web3 content.'} icon={'build_circle'} />
                     }
                 </div>
             }
@@ -66,7 +75,9 @@ const Permission = (props) => {
             {
                 certificatePermission ? null : <div className='permission-gateway'>
                     {
-                        <PermissionItem disable={disable} setDisable={setDisable} permissionFunc={updateCAPermission} title={'Create New Certificates on Your Device'} desc={'This will allow us to create secure connections (Https) to the blockchain. By creating certificates for every Frigid Domain you visit.'} icon={'hotel_class'} />
+
+                        <B_Profile permissionFunc={updateCAPermission} />
+                        // <PermissionItem disable={disable} setDisable={setDisable} permissionFunc={updateCAPermission} title={'Create New Certificates on Your Device'} desc={'This will allow us to create secure connections (Https) to the blockchain. By creating certificates for every Frigid Domain you visit.'} icon={'hotel_class'} />
                     }
                     {/*     {
                         <PermissionItem disable={disable} setDisable={setDisable} permissionFunc={updateCAPermission} title={

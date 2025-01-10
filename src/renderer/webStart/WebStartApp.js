@@ -5,7 +5,8 @@ import logo from '../../../assets/startIcon.png'
 import { Route, Routes } from 'react-router-dom';
 import Wrapper from './mainapp/wrapper';
 import Home from './mainapp/hompage/home';
-
+import B_StartWelcome from '../webDev/components/boards/b_startWelcome';
+import B_StartHue from '../webDev/components/boards/b_startHue';
 
 export default function WebStartApp() {
 
@@ -25,7 +26,10 @@ export default function WebStartApp() {
 
         <Routes>
           <Route path="/" element={<Wrapper />} >
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Home />} >
+              <Route path="/onboarding/start" element={<B_StartWelcome />} />
+              <Route path="/onboarding/hue" element={<B_StartHue />} />
+            </Route>
 
           </Route>
 

@@ -16,8 +16,8 @@ if (process.env.NODE_ENV === 'development') {
     pathway = __dirname;
     root = app.getAppPath();
 } else if (getAppPathway()) {
-    pathway = getAppPathway() + '/../../'
-    root = getAppPathway() + '/../../'
+    pathway = path.resolve(getAppPathway() + '/../../')
+    root = path.resolve(getAppPathway() + '/../../')
 } else {
     throw new Error('PORTABLE_EXECUTABLE_DIR is not defined in production mode');
 }

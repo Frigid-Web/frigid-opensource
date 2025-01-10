@@ -88,6 +88,10 @@ const configuration: webpack.Configuration = {
           'file-loader',
         ],
       },
+      {
+        test: /\.(mp4)$/i,
+        type: 'asset/resource',
+      },
     ],
   },
 

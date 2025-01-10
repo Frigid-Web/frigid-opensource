@@ -1,5 +1,5 @@
-import React from "react";
-import { Link, Outlet, Route } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Link, Outlet, Route, useNavigate } from "react-router-dom";
 import { NavLink } from "react-router-dom";
 import { useSelector } from "react-redux";
 import logo from '../../../assets/frigidlogo.png'
@@ -9,15 +9,25 @@ import { useDispatch } from "react-redux";
 import Permission from "./permissions/permission";
 import { Tooltip } from "@mantine/core";
 
+
 function ScreenRoot() {
     const dispatch = useDispatch()
     const networkActive = useSelector(state => state.mainapp.networkSlice.networkActive)
-    const [loading, setLoading] = useState(false)
 
+    const [loaded, setLoaded] = useState(false)
+    const navigate = useNavigate()
+    useEffect(() => {
+        (async () => {
+            const onBoarding = await window.electron.store.get('onboardingStatus')
+            if (onBoarding != true) {
+                navigate('/onboarding/start')
+            }
+            setLoaded(true)
+        })()
+    }, [])
 
     return (
         <>
-            <Permission />
             <div className="root-container">
 
 

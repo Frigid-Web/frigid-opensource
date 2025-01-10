@@ -83,7 +83,6 @@ async function checkIfRootCAExistsMac() {
 
         const securityCommand = `security find-certificate -c "${caName}" -a -Z`;
         return new Promise((resolve, reject) => {
-            console.log('test')
             exec(securityCommand, (error, stdout, stderr) => {
                 if (error) {
                     console.log(error)

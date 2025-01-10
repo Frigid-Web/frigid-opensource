@@ -5,6 +5,8 @@ import { toggleNetworkActive } from '../../store/schemas/networkSlice';
 import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
 import loadingIcon from '../../../../assets/loading.gif'
+import { Link } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 
 const Network = () => {
 
@@ -46,7 +48,6 @@ const Network = () => {
 
     useEffect(() => {
         const handleNetworkStatus = (data) => {
-            console.log(data)
             if (data === 'on') {
                 dispatch(toggleNetworkActive());
             } else {
@@ -67,13 +68,14 @@ const Network = () => {
 
     return (
         <>
-
+            <Outlet />
             <div className='network-page'>
                 {/*         <p>“A group of penguins in the water is called a raft but on land they’re called a waddle!”</p> */}
 
                 <span className="version-status-string slim-version">
                     <i className="material-icons">science</i>
                     <p>Release Beta: 0.0.1</p>
+
                 </span>
 
                 <div className='network-controls vivify fadeIn duration-300'>
@@ -169,7 +171,8 @@ const Network = () => {
 
                             : null
                     }
-
+                    {/* <Link style={{ color: 'white' }} to={'/onboarding/start?background=true'}>Run Onboarding Test</Link>
+                    <Link style={{ color: 'white' }} to={'/onboarding/start?background=false'}>Run Glass Test</Link> */}
                     <div className='footer-text'>
                         <i className='material-icons'>
                             lock

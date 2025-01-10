@@ -1,149 +1,46 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import S_BoardController from './boards/s_boardController';
 // import { getAppInfo } from '../../helpers/appInfo';
+import { Outlet } from 'react-router-dom';
+import { checkRpc } from './boards/helperCheckRpc';
 
 const Settings = () => {
-    const [ethereum, setEthereum] = useState(window.electron.store.get('rpc.ethereum'));
-    const [binanceSmartChain, setBinanceSmartChain] = useState(window.electron.store.get('rpc.binance'));
-    const [ethereumClassic, setEthereumClassic] = useState(window.electron.store.get('rpc.ethereumclassic'));
-    const [avalanche, setAvalanche] = useState(window.electron.store.get('rpc.avalanche'));
-    const [arbitrum, setArbitrum] = useState(window.electron.store.get('rpc.arbitrum'));
-    const [optimism, setOptimism] = useState(window.electron.store.get('rpc.optimism'));
-    const [fantomOpera, setFantomOpera] = useState(window.electron.store.get('rpc.fantom'));
-    const [polygon, setPolygon] = useState(window.electron.store.get('rpc.polygon'));
-    const [chainAppInfo, setChainAppInfo] = useState(window.electron.store.get('chainAppInfo'));
 
-    console.log(window.electron.store.get('rpc'))
-    const testRPC = async (url) => {
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    jsonrpc: '2.0',
-                    method: 'web3_clientVersion',
-                    params: [],
-                    id: 1
-                })
-            });
-            const data = await response.json();
-            return data.result !== undefined;
-        } catch (error) {
-            return false;
-        }
+    const location = useLocation()
+    const [flipFlopRefresh, setFlipFlopRefresh] = useState(false)
+
+   
+
+    useEffect(() => {
+        setFlipFlopRefresh(!flipFlopRefresh)
+    }, [location])
+    const testRPC = async (url, chainName) => {
+        return await checkRpc(url, chainName)
     };
 
-    const handleInputChange = async (key, value, setValue, e) => {
-        const isValid = await testRPC(value)
+    const handleInputChange = async (key, value, e) => {
+        const isValid = await testRPC(value, key)
         if (isValid) {
-            setValue(value);
             window.electron.store.set(`rpc.${key}`, value);
         } else {
-            setValue(window.electron.store.get(`rpc.${key}`)); // revert to previous value
             e.target.value = window.electron.store.get(`rpc.${key}`);
         }
     };
 
-    const handlerForInputs = (key) => {
-        let html
-        switch (key) {
-            case 'etheruem':
-                html = <>
-                    <div className='text-container'>
-                        <label htmlFor='ethRpc'>Ethereum</label>
-                        <input type='text' id='ethRpc' defaultValue={ethereum} onBlur={(e) => { handleInputChange('ethereum', e.target.value, setEthereum, e) }} />
-                    </div>
-                </>
-                break;
-            case 'binance':
-                html = <>
-                    <div className='text-container'>
-                        <label htmlFor='bscRpc'>Binance Smart Chain</label>
-                        <input type='text' id='bscRpc' defaultValue={binanceSmartChain}
-                            onBlur={(e) => { handleInputChange('binance', e.target.value, setBinanceSmartChain, e) }}
-                        />
-                    </div>
-                </>
-                break;
-            case 'ethereumclassic':
-                html = <>
-                    <div className='text-container'>
-                        <label htmlFor='etcRpc'>Ethereum Classic</label>
-                        <input type='text' id='etcRpc' defaultValue={ethereumClassic}
-                            onBlur={(e) => { handleInputChange('ethereumclassic', e.target.value, setEthereumClassic, e) }}
-                        />
-                    </div>
-                </>
-                break;
-            case 'avalanche':
-                html = <>
-                    <div className='text-container'>
-                        <label htmlFor='avaxRpc'>Avalanche</label>
-                        <input type='text' id='avaxRpc' defaultValue={avalanche}
-                            onBlur={(e) => { handleInputChange('avalanche', e.target.value, setAvalanche, e) }}
-                        />
-                    </div>
-                </>
-                break;
-            case 'arbitrum':
-                html = <>
-                    <div className='text-container'>
-                        <label htmlFor='arbRpc'>Arbitrum</label>
-                        <input type='text' id='arbRpc' defaultValue={arbitrum}
-                            onBlur={(e) => { handleInputChange('arbitrum', e.target.value, setArbitrum, e) }}
-                        />
-                    </div>
-                </>
-                break;
-            case 'optimism':
-                html = <>
-                    <div className='text-container'>
-                        <label htmlFor='optRpc'>Optimism</label>
-                        <input type='text' id='optRpc' defaultValue={optimism}
-                            onBlur={(e) => { handleInputChange('optimism', e.target.value, setOptimism, e) }}
-                        />
-                    </div>
-                </>
-                break;
-            case 'fantom':
-                html = <>
-                    <div className='text-container'>
-                        <label htmlFor='fantomRpc'>Fantom Opera</label>
-                        <input type='text' id='fantomRpc' defaultValue={fantomOpera}
-                            onBlur={(e) => { handleInputChange('fantom', e.target.value, setFantomOpera, e) }}
-                        />
-                    </div>
-                </>
-                break;
-            case 'polygon':
-                html = <>
-                    <div className='text-container'>
-                        <label htmlFor='polygonRpc'>Polygon</label>
-                        <input type='text' id='polygonRpc' defaultValue={polygon}
-                            onBlur={(e) => { handleInputChange('polygon', e.target.value, setPolygon, e) }}
-                        />
-                    </div>
-                </>
-                break;
-
-
-            default:
-                break;
-        }
-
-        return html
-    }
+  
 
 
     return (
-        <div className='settings-page'>
-            <h1>Settings</h1>
+        <>
+            <Outlet></Outlet>
+            <div className='settings-page'>
+                <h1>Settings</h1>
 
-            <div className='options-list'>
+                <div className='options-list'>
 
-                {/* <div className='option-block'>
+                    {/* <div className='option-block'>
                     <h4 style={{ marginBottom: '-9px' }}>DNS Configuration</h4>
                     <div className='text-container'>
                         <label for='dns'>Primary</label>
@@ -161,7 +58,7 @@ const Settings = () => {
                     </div>
                 </div> */}
 
-                <div className='option-block'>
+                    {/*  <div className='option-block'>
                     <h4>Blockchain RPC</h4>
                     {(() => {
 
@@ -176,13 +73,46 @@ const Settings = () => {
 
                     })()}
 
+                </div> */}
+
+                    <div className='settings-container'>
+                        <div className='settings-option'>
+                            <h3>Network RPC's</h3>
+                            <div className='settings-option-items'>
+                                
+                                {
+                                    (() => {
+                                        let elements = []
+                                        let rpc = window.electron.store.get('rpc')
+                                        for(let key in rpc){
+                                            if(key != 'version' && rpc[key] != null){
+                                                elements.push(
+                                                    <div className='option-input' key={key+rpc[key]}>
+                                                        <input type='text' id={key} defaultValue={window.electron.store.get(`rpc.${key}`)} onBlur={(e) => { handleInputChange(key, e.target.value, e) }} />
+                                                        <label htmlFor={key}>{key}</label>
+                                                    </div>
+                                                )
+                                            }
+                                          
+                                        }
+                                        return  elements
+                                    })()
+                                }
+
+                            </div>
+                            <div className='settings-option-buffer'>
+                                <Link to='/settings/rpcsetup/start'>
+                                    Want to Add Another Network? <span>Add New </span>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
                 </div>
-
-
-
-
-            </div>
-        </div>
+            </div></>
     );
 };
 

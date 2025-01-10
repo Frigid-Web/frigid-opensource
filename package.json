@@ -92,7 +92,8 @@
     "electron-log": "^4.4.8",
     "electron-store": "^8.2.0",
     "electron-updater": "^6.1.4",
-    "ethers": "^6.12.1",
+    "ethers": "^6.13.4",
+    "file-system-cache": "^2.3.0",
     "file-type": "^16.5.4",
     "flatlist-react": "^1.5.14",
     "fs-extra": "^11.2.0",
@@ -103,9 +104,12 @@
     "jszip": "^3.10.1",
     "lodash": "^4.17.21",
     "lottie-react": "^2.4.0",
+    "mediainfo.js": "^0.3.3",
     "mime": "^3.0.0",
+    "music-metadata": "^7.14.0",
     "node-fetch": "^2.7.0",
     "node-osascript": "^2.1.0",
+    "pure-react-carousel": "^1.32.0",
     "queue": "^7.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -251,10 +255,6 @@
     "publish": {
       "provider": "github"
     }
-  },
-  "devEngines": {
-    "node": ">=14.x",
-    "npm": ">=7.x"
   },
   "electronmon": {
     "patterns": [

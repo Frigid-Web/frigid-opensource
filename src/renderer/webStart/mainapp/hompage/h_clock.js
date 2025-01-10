@@ -37,16 +37,17 @@ const H_Clock = () => {
 
     return (
         <>
-            {/*   <div className='start-clock'>
-            <p>{greeting}</p>
-            <div className='start-clock-text'>
-                <h1>{currentTime}</h1>
-            </div>
-        </div>  */}
+
 
             <div className='start-hero vivify fadeIn duration-300 delay-200'>
                 <img src={logo} alt='logo' className='logo' />
             </div>
+            {/*    <div className='start-clock'>
+                <p>{greeting}</p>
+                <div className='start-clock-text'>
+                    <h1>{currentTime}</h1>
+                </div>
+            </div> */}
         </>
     );
 }

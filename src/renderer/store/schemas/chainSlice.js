@@ -17,15 +17,15 @@ const initialState = () => ({
         icon: 'polygon',
         slug: 'polygon',
         nativeCurrency: {
-            name: 'MATIC',
-            symbol: 'MATIC',
+            name: 'POL',
+            symbol: 'POL',
             decimals: 18,
         },
         stableToken: {
             name: 'USDT',
             symbol: 'USDT',
             decimals: 6,
-            unit:'mwei'
+            unit: 'mwei'
         },
         rpcUrl: 'https://polygon-bor-rpc.publicnode.com',
         image: polygonIcon,
@@ -40,21 +40,20 @@ const initialState = () => ({
             icon: 'polygon',
             slug: 'polygon',
             nativeCurrency: {
-                name: 'MATIC',
-                symbol: 'MATIC',
+                name: 'POL',
+                symbol: 'POL',
                 decimals: 18,
             },
             stableToken: {
                 name: 'USDT',
                 symbol: 'USDT',
                 decimals: 6,
-                unit:'mwei'
+                unit: 'mwei'
             },
             rpcUrl: 'https://polygon-bor-rpc.publicnode.com',
             image: polygonIcon,
             domainEnding: 'poly',
             animal: 'fox',
-
         },
         {
             name: 'Binance',
@@ -71,7 +70,7 @@ const initialState = () => ({
                 name: 'USDT',
                 symbol: 'USDT',
                 decimals: 18,
-                unit:'ether'
+                unit: 'ether'
 
             },
             rpcUrl: 'https://binance.llamarpc.com',
@@ -94,7 +93,7 @@ const initialState = () => ({
                 name: 'USDT',
                 symbol: 'USDT',
                 decimals: 6,
-                unit:'mwei'
+                unit: 'mwei'
 
             },
             rpcUrl: 'https://etc.rivet.link',
@@ -118,7 +117,7 @@ const initialState = () => ({
                 name: 'USDT',
                 symbol: 'USDT',
                 decimals: 6,
-                unit:'mwei'
+                unit: 'mwei'
             },
             rpcUrl: 'https://avalanche-c-chain-rpc.publicnode.com',
             image: avalancheIcon,
@@ -140,7 +139,7 @@ const initialState = () => ({
                 name: 'USDT',
                 symbol: 'USDT',
                 decimals: 6,
-                unit:'mwei'
+                unit: 'mwei'
 
             },
             rpcUrl: 'https://arbitrum.llamarpc.com',
@@ -163,7 +162,7 @@ const initialState = () => ({
                 name: 'USDT',
                 symbol: 'USDT',
                 decimals: 6,
-                unit:'mwei'
+                unit: 'mwei'
 
             },
             rpcUrl: 'https://optimism.llamarpc.com',
@@ -186,7 +185,7 @@ const initialState = () => ({
                 name: 'USDT',
                 symbol: 'USDT',
                 decimals: 6,
-                unit:'mwei'
+                unit: 'mwei'
 
             },
             rpcUrl: 'https://fantom-rpc.publicnode.com',

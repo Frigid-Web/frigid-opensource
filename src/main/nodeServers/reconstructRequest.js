@@ -18,7 +18,6 @@ export function traverseAndReconstruct(structure, path) {
     let keys = path.split('/');
     keys = keys.filter(key => key !== '');
     let name = ''
-    console.log(keys)
     while(keys.length > 0) {
         let key = keys.shift();
         if(structure[key]){

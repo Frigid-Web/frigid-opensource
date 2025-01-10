@@ -4,6 +4,7 @@ import cors from 'cors';
 import { app } from 'electron';
 import { getAppPathway } from '../../util';
 import fs from 'fs';
+import path from 'path';
 const mime = require('mime');
 
 
@@ -16,7 +17,7 @@ if (process.env.NODE_ENV === 'development') {
     root = app.getAppPath();
 } else if (getAppPathway()) {
     pathway = getAppPathway()
-    root = getAppPathway() + '/../../'
+    root = path.resolve(getAppPathway() + '/../../')
 } else {
     throw new Error('PORTABLE_EXECUTABLE_DIR is not defined in production mode');
 }
@@ -65,7 +66,7 @@ startFrigid.use(async (req, res) => {
         let fileResponse = null
         if (splitPaths.length == 0) {
             //Page render
-            fileResponse = { data: fs.readFileSync(pathway + '/renderer/index.html'), mime: 'text/html' };
+            fileResponse = { data: fs.readFileSync(path.resolve(pathway + '/renderer/index.html')), mime: 'text/html' };
         }
         else {
             let hasExtension = splitPaths[splitPaths.length - 1].includes('.')
@@ -81,11 +82,11 @@ startFrigid.use(async (req, res) => {
                     newHostPath = hostPath.replace(pathToRemove.join('/'), '')
                 }
                 const type = mime.getType(newHostPath) || 'application/octet-stream';
-                fileResponse = { data: fs.readFileSync(pathway + '/renderer' + newHostPath), mime: type };
+                fileResponse = { data: fs.readFileSync(path.resolve(pathway + '/renderer' + newHostPath)), mime: type };
 
             }
             else {
-                fileResponse = { data: fs.readFileSync(pathway + '/renderer/index.html'), mime: 'text/html' };
+                fileResponse = { data: fs.readFileSync(path.resolve(pathway + '/renderer/index.html')), mime: 'text/html' };
 
             }
         }

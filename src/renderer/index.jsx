@@ -14,7 +14,7 @@ import { HelmetProvider } from 'react-helmet-async';
 const App = lazy(() => import('./native/App'));
 const WebStartApp = lazy(() => import('./webStart/WebStartApp'));
 
-const Home = lazy(() => import('./webApp/home'));
+const Home = lazy(() => import('./webDev/home'));
 
 root.render(
   window.electron ? (
@@ -29,45 +29,45 @@ root.render(
   )
     :
 
-     (() => {
-        switch (window.location.hostname) {
-          case 'dev.frigid': {
-            return (
-              <HelmetProvider>
-                <Provider store={store}>
-                  <MantineProvider>
-                    <BrowserRouter>
-                      <Suspense fallback={<></>}>
-                        <Home />
-                      </Suspense>
-                    </BrowserRouter>
-                  </MantineProvider>
-                </Provider>
-              </HelmetProvider>
-            )
-          }
-          case 'start.frigid': {
-            return (
-              <HelmetProvider>
-                <Provider store={store}>
-                  <MantineProvider>
-                    <BrowserRouter>
-                      <Suspense fallback={<></>}>
-                        <WebStartApp />
-                      </Suspense>
-                    </BrowserRouter>
-                  </MantineProvider>
-                </Provider>
-              </HelmetProvider>
-            )
-          }
-          default: {
-            return (
-             <p>Resource not Found</p>
-            )
-          }
+    (() => {
+      switch (window.location.hostname) {
+        case 'dev.frigid': {
+          return (
+            <HelmetProvider>
+              <Provider store={store}>
+                <MantineProvider>
+                  <BrowserRouter>
+                    <Suspense fallback={<></>}>
+                      <Home />
+                    </Suspense>
+                  </BrowserRouter>
+                </MantineProvider>
+              </Provider>
+            </HelmetProvider>
+          )
         }
-     })()
+        case 'start.frigid': {
+          return (
+            <HelmetProvider>
+              <Provider store={store}>
+                <MantineProvider>
+                  <BrowserRouter>
+                    <Suspense fallback={<></>}>
+                      <WebStartApp />
+                    </Suspense>
+                  </BrowserRouter>
+                </MantineProvider>
+              </Provider>
+            </HelmetProvider>
+          )
+        }
+        default: {
+          return (
+            <p>Resource not Found</p>
+          )
+        }
+      }
+    })()
 
 
 

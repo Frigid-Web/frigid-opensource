@@ -14,26 +14,32 @@ const New_Block = () => {
                 <div className="classic-content">
                     <div className="classic-left">
                         <h2>
-                            Welcome To Frigid <span>Start</span>
+                            <span>New</span> Bug Fixes & Features
                         </h2>
-                        <p>Release Beta 0.0.1</p>
+                        <p>Release Beta 0.0.2</p>
                     </div>
                     <div className="classic-right">
                         <div className="flow-text">
                             <div className="flow-text-block">
-                                <h3>Introducing Frigid Start </h3>
-                                <p>Spotlighting new and upcoming apps, keeping you up to date on changes and featuring the latest developer tools and resources.</p>
+                                <h3>Redesigned Onboarding </h3>
+                                <p>
+                                    We redesigned the first time onboarding and the RPC setup process to make it more user friendly.
+                                </p>
                             </div>
 
                             <div className="flow-text-block">
-                                <h3>Improved DNS Config Cleanup</h3>
-                                <p>Frigid modifies your dns config to allow you to access Frigid web apps. We improved the cleanup process when Frigid is powered off.</p>
+                                <h3>Improved Web3 Content Viewing</h3>
+                                <p>
+                                    Videos, images, and other web3 content are now more reliable and feature rich.
+                                </p>
                             </div>
+
+
                         </div>
                     </div>
                 </div>
                 <div className="classic-footer">
-                    <p>Published June 14, 2024</p>
+                    <p>Published Jan 10, 2025</p>
                 </div>
 
             </div>

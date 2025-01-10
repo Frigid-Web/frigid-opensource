@@ -32,7 +32,7 @@ if (process.env.NODE_ENV === 'development') {
     root = app.getAppPath();
 } else if (getAppPathway()) {
     pathway = getAppPathway()
-    root = getAppPathway() + '/../../'
+    root = path.resolve(getAppPathway() + '/../../')
 } else {
     throw new Error('PORTABLE_EXECUTABLE_DIR is not defined in production mode');
 }
@@ -79,7 +79,6 @@ const changeDNSMac = async () => {
     if(!fs.existsSync(dnsFile)){
       return false
     }
-    console.log(dnsFile)
     await command(`"${dnsFile}"`)
     
     return true
@@ -282,7 +281,9 @@ export const createDNSControllerMac = async () => {
       chmod +x "${dnsSetFile}" "${dnsResetFile}" &&
       sudo sed -i '' '/${escapedDnsSetFile}/d' /etc/sudoers &&
       sudo sed -i '' '/${escapedDnsResetFile}/d' /etc/sudoers &&
-      echo "${sudoersEntry}" | sudo tee -a /etc/sudoers
+      echo "${sudoersEntry}" | sudo tee -a /etc/sudoers &&
+      sudo chmod -R 700 "${dnsFolder}"
+
     `;
 
 
@@ -335,7 +336,6 @@ Start-ScheduledTask -TaskName $taskName;
   
   const taskResults = await execute(`powershell -Command "${formattedPsScript}"`);
   
-    console.log("Hi")
     return true
   } catch (error) {
     if(error.message.includes('because /ST is earlier')){

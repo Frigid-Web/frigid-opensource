@@ -29,7 +29,7 @@ if (process.env.NODE_ENV === 'development') {
     root = app.getAppPath();
 } else if (getAppPathway()) {
     pathway = getAppPathway()
-    root = getAppPathway() + '/../../'
+    root = path.resolve(getAppPathway() + '/../../')
 } else {
     throw new Error('PORTABLE_EXECUTABLE_DIR is not defined in production mode');
 }
@@ -129,7 +129,7 @@ devFrigid.use(async (req, res) => {
         let fileResponse = null
         if (splitPaths.length == 0) {
             //Page render
-            fileResponse = { data: fs.readFileSync(pathway + '/renderer/index.html'), mime: 'text/html' };
+            fileResponse = { data: fs.readFileSync(path.resolve(pathway + '/renderer/index.html')), mime: 'text/html' };
         }
         else {
             let hasExtension = splitPaths[splitPaths.length - 1].includes('.')
@@ -399,10 +399,10 @@ const prepareMapping = (startDir) => {
     for (let i = 0; i < jsonChunks.length; i++) {
         if (jsonChunks.length - 1 === i) {
 
-            fs.writeFileSync(seedChunksDir + `/${i + 1}.json`, JSON.stringify({ f: jsonChunks[i] }));
+            fs.writeFileSync(path.resolve(seedChunksDir + `/${i + 1}.json`), JSON.stringify({ f: jsonChunks[i] }));
         }
         else {
-            fs.writeFileSync(seedChunksDir + `/${i + 1}.json`, JSON.stringify({ f: jsonChunks[i], c: null }));
+            fs.writeFileSync(path.resolve(seedChunksDir + `/${i + 1}.json`), JSON.stringify({ f: jsonChunks[i], c: null }));
         }
     }
 
@@ -465,11 +465,11 @@ const prepareMappingForFiles = (fullPathPreview, fullPathMapping) => {
     for (let i = 0; i < jsonChunks.length; i++) {
         if (jsonChunks.length - 1 === i) {
 
-            fs.writeFileSync(seedChunksDir + `/${i}.json`, JSON.stringify({ f: jsonChunks[i] }));
+            fs.writeFileSync(path.resolve(seedChunksDir + `/${i}.json`), JSON.stringify({ f: jsonChunks[i] }));
         }
         else {
             let lastItem = jsonChunks[i].pop()
-            fs.writeFileSync(seedChunksDir + `/${i}.json`, JSON.stringify({ f: jsonChunks[i], c: null }));
+            fs.writeFileSync(path.resolve(seedChunksDir + `/${i}.json`), JSON.stringify({ f: jsonChunks[i], c: null }));
         }
     }
 
@@ -552,6 +552,9 @@ const publish = async (ws, data) => {
                     }
                 }
             }
+            else{
+
+            }
         }
     }
 
@@ -599,44 +602,50 @@ const publish = async (ws, data) => {
 
 
     async function traverseDirectory(mappingDirectory, previewDirectory, filePath=[]) {
-        let files = fs.readdirSync(mappingDirectory);
-        files = files.sort((a, b) => parseInt(b) - parseInt(a))
-        let fileCheck = files[files.length - 1] 
-        const fileCheckStat = fs.statSync(path.join(mappingDirectory, fileCheck));
-        let shouldOverwrite = false
-        if (!fileCheckStat.isDirectory()) {
-            if(fileCheck == '0.json'){
-                let checkFileData = await checkIfFileIsDifferent(filePath)
-                shouldOverwrite = checkFileData.shouldOverwrite
-                let prodHash = checkFileData.hash
-                if(shouldOverwrite){
-                    let seedPath = domainPath + '/seedChunks'
-                    let seedFiles = fs.readdirSync(seedPath)
-                    for (let seedFile of seedFiles) {
-                        let  fileData =fs.readFileSync(path.join(seedPath, seedFile), 'utf8')
-                        let jsonData = JSON.parse(fileData);
-                        let fileHashLocation = _.get(jsonData.f, filePath, undefined)
-                        if( fileHashLocation !== undefined ){
-                            
-                            if(fileHashLocation != prodHash){
-                                _.set(jsonData.f, filePath, prodHash)
-                                fs.writeFileSync(path.join(seedPath, seedFile), JSON.stringify(jsonData))
-                                ws.send(JSON.stringify({ message: 1, type: 'progress' }));
+        try {
+            let files = fs.readdirSync(mappingDirectory);
+            files = files.sort((a, b) => parseInt(b) - parseInt(a))
+            let fileCheck = files[files.length - 1] 
+            const fileCheckStat = fs.statSync(path.join(mappingDirectory, fileCheck));
+            let shouldOverwrite = false
+            if (!fileCheckStat.isDirectory()) {
+    
+                if(fileCheck == '0.json'){
+                    let checkFileData = await checkIfFileIsDifferent(filePath)
+                    shouldOverwrite = checkFileData.shouldOverwrite
+                    let prodHash = checkFileData.hash
+                    if(shouldOverwrite){
+                        let seedPath = domainPath + '/seedChunks'
+                        let seedFiles = fs.readdirSync(seedPath)
+                        for (let seedFile of seedFiles) {
+                            let  fileData =fs.readFileSync(path.join(seedPath, seedFile), 'utf8')
+                            let jsonData = JSON.parse(fileData);
+                            let fileHashLocation = _.get(jsonData.f, filePath, undefined)
+                            if( fileHashLocation !== undefined ){
+                                
+                                if(fileHashLocation != prodHash){
+                                    _.set(jsonData.f, filePath, prodHash)
+                                    fs.writeFileSync(path.join(seedPath, seedFile), JSON.stringify(jsonData))
+                                    ws.send(JSON.stringify({ message: 1, type: 'progress' }));
+                                }
                             }
                         }
                     }
                 }
             }
-        }
-        for (let fileName of files) {
-            const stat = fs.statSync(path.join(mappingDirectory, fileName));
-            if (stat.isDirectory()) {
-                
-                await traverseDirectory(path.join(mappingDirectory, fileName), path.join(previewDirectory, fileName), [...filePath, fileName]);
-            } else if (fileName.endsWith('.json')) {
-                await processJSONFile(path.join(mappingDirectory, fileName), path.join(previewDirectory), fileName, shouldOverwrite);
+            for (let fileName of files) {
+                const stat = fs.statSync(path.join(mappingDirectory, fileName));
+                if (stat.isDirectory()) {
+                    
+                    await traverseDirectory(path.join(mappingDirectory, fileName), path.join(previewDirectory, fileName), [...filePath, fileName]);
+                } else if (fileName.endsWith('.json')) {
+                    await processJSONFile(path.join(mappingDirectory, fileName), path.join(previewDirectory), fileName, shouldOverwrite);
+                }
             }
+        } catch (error) {
+            dialog.showMessageBox({ message: error})
         }
+       
     }
 
 
@@ -676,7 +685,7 @@ const publish = async (ws, data) => {
                 }
                 else{
                     if (hash === null || hash === '0x') {
-                        const data = fs.readFileSync(`${currentDirectory}/${i}/chunk.txt`, 'utf8')
+                        const data = fs.readFileSync(path.resolve(`${currentDirectory}/${i}/chunk.txt`), 'utf8')
                         ws.send(JSON.stringify({ message: data, type: 'publishData' }));
                         await new Promise((resolve) => {
                             eventEmitter.removeAllListeners('transactionHashReceived'); 
@@ -702,7 +711,7 @@ const publish = async (ws, data) => {
         if (jsonData.c !== undefined) {
             if (jsonData.c === null) {
                 let fileNumber = parseInt(fileName) + 1;
-                const data = fs.readFileSync(`${filePathDirectory}/../${fileNumber}.json`, 'utf8')
+                const data = fs.readFileSync(path.resolve(`${filePathDirectory}/../${fileNumber}.json`), 'utf8')
                 const hex = '7b' + (new Buffer.from(data)).toString('hex') + '7d'
                 ws.send(JSON.stringify({ message: hex, type: 'publishData' }));
                 await new Promise((resolve) => {
@@ -730,143 +739,165 @@ const publish = async (ws, data) => {
     const domainPath = path.join(root + '/previews/', domainWithUnderscore);
 
     await countTotalFiles(domainPath + '/mappings')
-    fs.readdirSync(domainPath + '/seedChunks').forEach((fileName) => {
-        const jsonData = JSON.parse(fs.readFileSync(path.join(domainPath + '/seedChunks', fileName), 'utf8'));
-        if (jsonData.c !== undefined) {
-            if (jsonData.c === null && jsonData.c === '0x') {
-                count++;
-            }
-            else {
-                alreadyUploaded++;
-                count++;
+    let fileStrucutre = fs.readdirSync(path.resolve(domainPath + '/seedChunks'))
 
-            }
-        }
-        function traverseAndCheck(data) {
-            // Check if data is an object
-            if (typeof data === 'object' && data !== null) {
-                for (let key in data) {
-                    traverseAndCheck(data[key]);
-                }
-            } else {
-                // Check if the value is null or a string
-                if (data === null || data === '0x') {
+    for(let fileName of fileStrucutre){
+        try {
+
+            const jsonData = JSON.parse(fs.readFileSync(path.join(domainPath + '/seedChunks', fileName), 'utf8'));
+            if (jsonData.c !== undefined) {
+                if (jsonData.c === null && jsonData.c === '0x') {
                     count++;
-                } else if (typeof data === 'string') {
+                }
+                else {
                     alreadyUploaded++;
                     count++;
+    
                 }
             }
+            function traverseAndCheck(data) {
+                // Check if data is an object
+                if (typeof data === 'object' && data !== null) {
+                    for (let key in data) {
+                        traverseAndCheck(data[key]);
+                    }
+                } else {
+                    // Check if the value is null or a string
+                    if (data === null || data === '0x') {
+                        count++;
+                    } else if (typeof data === 'string') {
+                        alreadyUploaded++;
+                        count++;
+                    }
+                }
+            }
+            traverseAndCheck(jsonData.f);
+        } catch (error) {
+            dialog.showMessageBox({ message: error})
         }
-        traverseAndCheck(jsonData.f);
-
-
-    })
+    }
 
 
 
     const traverseSeedChunks = async (mappingDirectory, seedChunksDirectory) => {
-        let files = fs.readdirSync(seedChunksDirectory);
-        files = files.sort((a, b) => parseInt(b) - parseInt(a))
 
-        for (let fileName of files) {
-            let fileData = fs.readFileSync(path.join(seedChunksDirectory, fileName), 'utf8');
-            let jsonData = JSON.parse(fileData);
-            async function traverseAndCheck(data, pathway) {
-                // Check if data is an object
-                if (typeof data === 'object' && data !== null) {
-                    for (let key in data) {
-                        await traverseAndCheck(data[key], [...pathway, key]);
+        try {
+            let files = fs.readdirSync(seedChunksDirectory);
+            files = files.sort((a, b) => parseInt(b) - parseInt(a))
+    
+            for (let fileName of files) {
+                let fileData = fs.readFileSync(path.join(seedChunksDirectory, fileName), 'utf8');
+                let jsonData = JSON.parse(fileData);
+                async function traverseAndCheck(data, pathway) {
+                    // Check if data is an object
+                    if (typeof data === 'object' && data !== null) {
+                        for (let key in data) {
+                            await traverseAndCheck(data[key], [...pathway, key]);
+                        }
+                    } else {
+                        if (data === null) {
+                            let mappingData = fs.readFileSync(path.join(mappingDirectory, ...pathway, '0.json'), 'utf8');
+                            const hex = '7b' + (new Buffer.from(mappingData)).toString('hex') + '7d'
+    
+                            ws.send(JSON.stringify({ message: hex, type: 'publishData' }));
+                            await new Promise((resolve) => {
+                                eventEmitter.removeAllListeners('transactionHashReceived'); 
+    
+                                eventEmitter.once('transactionHashReceived', (data) => {
+                                    if (domain == data.domain) {
+                                        _.set(jsonData, ['f', ...pathway], data.transactionHash);
+                                        fs.writeFileSync(path.join(seedChunksDirectory, fileName), JSON.stringify(jsonData), 'utf8');
+                                        ws.send(JSON.stringify({ message: 1, type: 'progress' }));
+    
+                                        resolve()
+                                    }
+                                })
+                            })
+    
+                        }
                     }
-                } else {
-                    if (data === null) {
-                        let mappingData = fs.readFileSync(path.join(mappingDirectory, ...pathway, '0.json'), 'utf8');
-                        const hex = '7b' + (new Buffer.from(mappingData)).toString('hex') + '7d'
-
+                }
+                await traverseAndCheck(jsonData.f, []);
+    
+                if (jsonData.c !== undefined) {
+                    if (jsonData.c === null) {
+                        let fileNumber = parseInt(fileName) + 1
+                        let seedData = fs.readFileSync(path.join(seedChunksDirectory, `${fileNumber}.json`), 'utf8');
+                        const hex = '7b' + (new Buffer.from(seedData)).toString('hex') + '7d'
                         ws.send(JSON.stringify({ message: hex, type: 'publishData' }));
                         await new Promise((resolve) => {
                             eventEmitter.removeAllListeners('transactionHashReceived'); 
-
+    
                             eventEmitter.once('transactionHashReceived', (data) => {
                                 if (domain == data.domain) {
-                                    _.set(jsonData, ['f', ...pathway], data.transactionHash);
+                                    jsonData.c = data.transactionHash;
                                     fs.writeFileSync(path.join(seedChunksDirectory, fileName), JSON.stringify(jsonData), 'utf8');
                                     ws.send(JSON.stringify({ message: 1, type: 'progress' }));
-
+    
                                     resolve()
                                 }
                             })
                         })
-
                     }
                 }
+    
             }
-            await traverseAndCheck(jsonData.f, []);
-
-            if (jsonData.c !== undefined) {
-                if (jsonData.c === null) {
-                    let fileNumber = parseInt(fileName) + 1
-                    let seedData = fs.readFileSync(path.join(seedChunksDirectory, `${fileNumber}.json`), 'utf8');
-                    const hex = '7b' + (new Buffer.from(seedData)).toString('hex') + '7d'
-                    ws.send(JSON.stringify({ message: hex, type: 'publishData' }));
-                    await new Promise((resolve) => {
-                        eventEmitter.removeAllListeners('transactionHashReceived'); 
-
-                        eventEmitter.once('transactionHashReceived', (data) => {
-                            if (domain == data.domain) {
-                                jsonData.c = data.transactionHash;
-                                fs.writeFileSync(path.join(seedChunksDirectory, fileName), JSON.stringify(jsonData), 'utf8');
-                                ws.send(JSON.stringify({ message: 1, type: 'progress' }));
-
-                                resolve()
-                            }
-                        })
-                    })
-                }
-            }
-
+        } catch (error) {
+            dialog.showMessageBox({ message: error})
         }
+      
 
     }
 
     // Start traversing from the root directory of your mappings
 
+    try {
+        ws.send(JSON.stringify({ message: count + 2, alreadyUploaded, type: 'totalFiles' }));
 
-    ws.send(JSON.stringify({ message: count + 2, alreadyUploaded, type: 'totalFiles' }));
-
-    if (alreadyUploaded < count) {
-        await traverseDirectory(domainPath + '/mappings', domainPath + '/preview',);
-        await traverseSeedChunks(domainPath + '/mappings', domainPath + '/seedChunks');
+     
+    
+        if (alreadyUploaded < count) {
+                await traverseDirectory(domainPath + '/mappings', domainPath + '/preview');
+                await traverseSeedChunks(domainPath + '/mappings', domainPath + '/seedChunks');
+            
+          
+        }
+    
+     
+        let seedPath = domainPath + '/seedChunks'
+        let fileData = fs.readFileSync(path.join(seedPath, '1.json'), 'utf8');
+        const hex = '7b' + (new Buffer.from(fileData)).toString('hex') + '7d'
+    
+        ws.send(JSON.stringify({ message: hex, type: 'publishData' }));
+        await new Promise((resolve) => {
+            eventEmitter.removeAllListeners('transactionHashReceived'); 
+            eventEmitter.once('transactionHashReceived', (data) => {
+                if (domain == data.domain) {
+                    ws.send(JSON.stringify({ message: 1, type: 'progress' }));
+                    ws.send(JSON.stringify({ message: data.transactionHash, type: 'finalUpload' }));
+                    resolve()
+                }
+            })
+        })
+    
+        
+        await new Promise((resolve) => {
+            eventEmitter.removeAllListeners('transactionHashReceived'); 
+            eventEmitter.once('transactionHashReceived', (data) => {
+                if (domain == data.domain) {
+                    ws.send(JSON.stringify({ message: 1, type: 'progress' }));
+                    resolve()
+                }
+            })
+        })
+    
+        ws.send(JSON.stringify({ message: 'All files are uploaded.', type: 'end' }));
+    } catch (error) {
+        dialog.showMessageBox({ message: error})
+    
     }
 
-    let seedPath = domainPath + '/seedChunks'
-    let fileData = fs.readFileSync(path.join(seedPath, '1.json'), 'utf8');
-    const hex = '7b' + (new Buffer.from(fileData)).toString('hex') + '7d'
-
-    ws.send(JSON.stringify({ message: hex, type: 'publishData' }));
-    await new Promise((resolve) => {
-        eventEmitter.removeAllListeners('transactionHashReceived'); 
-        eventEmitter.once('transactionHashReceived', (data) => {
-            if (domain == data.domain) {
-                ws.send(JSON.stringify({ message: 1, type: 'progress' }));
-                ws.send(JSON.stringify({ message: data.transactionHash, type: 'finalUpload' }));
-                resolve()
-            }
-        })
-    })
-
-    
-    await new Promise((resolve) => {
-        eventEmitter.removeAllListeners('transactionHashReceived'); 
-        eventEmitter.once('transactionHashReceived', (data) => {
-            if (domain == data.domain) {
-                ws.send(JSON.stringify({ message: 1, type: 'progress' }));
-                resolve()
-            }
-        })
-    })
-
-    ws.send(JSON.stringify({ message: 'All files are uploaded.', type: 'end' }));
+   
 }
 
 
@@ -902,7 +933,9 @@ const upload = async (ws, data) => {
         if (index + 1 === total) {
 
             await decompress(zipFilePath, domainPath + '/stage1')
-
+            if(fs.existsSync(domainPath + '/stage1/__MACOSX')){
+                await deleteFolderRecursive(domainPath + '/stage1/__MACOSX')
+            }
             fs.unlinkSync(zipFilePath);
 
             await moveContentsUp(domainPath + '/stage1');
