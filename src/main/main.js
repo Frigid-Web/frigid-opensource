@@ -35,6 +35,10 @@ const schema = {
     type: "boolean",
     default: false
   },
+  "os":{
+    type: "string",
+    default: os.platform()
+  }
 }
 
 export const store = new Store({ schema });

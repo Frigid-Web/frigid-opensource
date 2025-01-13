@@ -13,7 +13,7 @@ import { useParams } from 'react-router-dom';
 import addTo from '../../../../../assets/addTo.svg'
 import confirm from '../../../../../assets/confirm.svg'
 import video from '../../../../../assets/instructionvideo.gif'
-
+import lock from '../../../../../assets/lock.svg'
 const B_Profile = (props) => {
     const navigate = useNavigate();
     const [disable, setDisable] = useState(false)
@@ -70,8 +70,14 @@ const B_Profile = (props) => {
         <>
             <O_BoardController >
 
-                <div className='board-content'>
-                    <div>
+                    {
+                        (() => {
+                            if(window.electron.store.get('os').includes('darwin')){
+                                return (
+                                    <>
+                                                    <div className='board-content'>
+
+                                     <div>
                         <div className='board-video'>
                             <img src={video} alt='video' />
                         </div>
@@ -105,9 +111,8 @@ const B_Profile = (props) => {
                         }>Add Profile To Settings</button>
 
                     </div>
-                </div>
-
-                <style>
+                    </div>
+                    <style>
                     {
                         `
 
@@ -116,6 +121,57 @@ const B_Profile = (props) => {
         padding: 0px}`
                     }
                 </style>
+                                    
+                                    </>
+                                
+                                )
+                            }
+                            else {
+                                return (
+                                    <>
+                                  <div className='board-content' style={{ gap: 15 }}>
+                    <div>
+                        <div className='board-header'>
+                            <img src={lock} alt='lock' />
+                            <h1>Access Web3 Safely</h1>
+                            <p>Click the button below to add the root certificate, enabling secure HTTPS connections for Web3 websites.</p>
+                        </div>
+
+                    </div>
+
+                    <div className='board-cta'>
+                        <button style={{ pointerEvents: disable ? 'none' : 'all' }} className='board-cta-button' onClick={
+                            () => {
+
+                                updateCAPermission()
+                            }
+                        }>Install Certificate</button>
+
+                    </div>
+                </div>
+                <style>
+                    {
+                        `
+                                .board-cta {
+    justify-content: flex-start;
+    align-items: flex-start;
+    margin-bottom: 37px;
+}
+                                `
+                    }
+                </style>
+                                    </>
+                                )
+                            }
+                        })()
+                    
+                
+                
+                
+                    }
+                   
+
+             
             </O_BoardController>
         </>
     );
