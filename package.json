@@ -1,6 +1,6 @@
 {
   "description": "Frigid Network Client",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "keywords": [
     "web3",
     "ethereum",
@@ -198,7 +198,7 @@
     "productName": "Frigid",
     "appId": "org.eldrbreak.frigid",
     "asar": true,
-    "asarUnpack": "**\\*.{node,dll}",
+    "asarUnpack": "**\\*.{node,dll,wasm}",
     "files": [
       "dist",
       "node_modules",

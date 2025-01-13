@@ -278,7 +278,7 @@ Man it sure is cold in here!
                     <h1>Developer</h1>
                     <span className="version-status-string">
                         <i className="material-icons">science</i>
-                        <p>Release Beta: 0.0.1</p>
+                        <p>Release Beta: 0.0.2</p>
                     </span>
 
                 </div>

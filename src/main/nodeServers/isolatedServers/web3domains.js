@@ -4,13 +4,13 @@ import { store } from '../../main';
 import { dnsAbi } from '../../../renderer/helpers/abi';
 import _ from 'lodash'
 import path from 'path';
-import {parseBuffer} from 'music-metadata';
-import MediaInfo from 'mediainfo.js'
+import MediaInfo from '../../helperFunctions/mediaInfo';
 import Cache from "file-system-cache";
-import { app } from 'electron';
+import { app, dialog } from 'electron';
 const fs = require('fs');
 const mime = require('mime');
 const web3Domains = express();
+let mediaInfo = null
 
 const websiteCachePath =  path.resolve(app.getPath('cache'), 'FrigidCache')
 if(!fs.existsSync(websiteCachePath)){
@@ -244,7 +244,7 @@ async function getMediaSize(buffer) {
       
         return { totalSize: Math.floor(totalSize), sizePerSecond: Math.floor(sizePerSecond) };
       }
-    const mediaInfo = await MediaInfo();
+
     const metadata = await mediaInfo.analyzeData(() => buffer.length, (size) => buffer);
     return calculateTotalSize(metadata);
   }
@@ -500,10 +500,18 @@ export const processWeb3Request = async (req, res) => {
 
 
 
-
-
-
 web3Domains.get('*', async (req, res) => {
+        if(mediaInfo == null){
+            mediaInfo = await  MediaInfo({
+                locateFile: (fileName) => {
+                    
+                    return 'http://mediainfo.frigid'
+                  }
+            })
+           
+
+        }
+   
     processWeb3Request(req, res)
 })
 

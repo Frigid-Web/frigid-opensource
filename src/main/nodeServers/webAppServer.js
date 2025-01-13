@@ -16,10 +16,27 @@ import { store } from '../main';
 import localFrigid from './isolatedServers/localFrigid';
 import startFrigid from './isolatedServers/startFrigid';
 import pingPongFrigid from './isolatedServers/pingPongFrigid';
-import { dialog } from 'electron';
+import { dialog, app as electronApp } from 'electron';
+import { getAppPathway } from '../util';
+import path from 'path';
 
 const app = express();
 const pingPongServer = express();
+
+let pathway;
+let root;
+if (process.env.NODE_ENV === 'development') {
+    pathway = __dirname;
+    root = electronApp.getAppPath();
+} else if (getAppPathway()) {
+    pathway = getAppPathway()
+    root = path.resolve(getAppPathway() + '/../../')
+} else {
+    throw new Error('PORTABLE_EXECUTABLE_DIR is not defined in production mode');
+}
+
+
+
 
 let PORT_HTTP = 80;
 let PORT_HTTPS = 443;
@@ -124,7 +141,22 @@ pingPongServer.use(async (req, res, next) => {
         return;
     }
     if (domainSuffix === 'frigid') {
+        if(host == 'mediainfo.frigid'){
+            const wasmPath = path.resolve(root, 'assets', 'MediaInfoModule.wasm');
 
+            // Ensure the correct MIME type is set for .wasm files
+            res.setHeader('Content-Type', 'application/wasm');
+
+            res.sendFile(wasmPath, (err) => {
+                if (err) {
+                    console.error('Error sending WASM file:', err);
+                    res.status(err.status).end();
+                }
+            });
+       
+      
+            return 
+        }
         switch (host) {
             case 'ping.frigid': pingPongFrigid(req, res, next); break;
             default: break;

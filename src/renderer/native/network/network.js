@@ -74,7 +74,7 @@ const Network = () => {
 
                 <span className="version-status-string slim-version">
                     <i className="material-icons">science</i>
-                    <p>Release Beta: 0.0.1</p>
+                    <p>Release Beta: 0.0.2</p>
 
                 </span>
 
