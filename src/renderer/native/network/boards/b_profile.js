@@ -46,7 +46,7 @@ const B_Profile = (props) => {
                 else {
                     navigatePathway = '/onboarding/complete'
                 }
-                if (status.dnsStatus) {
+                if (status.certificateStatus) {
                     navigate(navigatePathway)
                 }
             };
@@ -58,7 +58,6 @@ const B_Profile = (props) => {
 
 
             return () => {
-                //kills listener
                 listener()
                 listener2()
 

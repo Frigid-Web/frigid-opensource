@@ -60,6 +60,7 @@ ipcMain.on('native', async (event, data) => {
       let installDNSBool;
       if (os.platform() === 'win32') {
         installDNSBool = await createDNSControllerTask();
+        await new Promise((resolve) => setTimeout(resolve, 3000));
       } else {
         installDNSBool = await createDNSControllerMac();
       }

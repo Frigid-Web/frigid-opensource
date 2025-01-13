@@ -93,6 +93,19 @@ const changeDNSMac = async () => {
 const changeDNSWindows = async () => {
 
   try {
+    const userPath = app.getPath('userData')
+    let directoryPath = path.join(userPath, 'Frigid', 'DNSController')
+    await ensureDir(directoryPath)
+    directoryPath = directoryPath.replace(/\\/g, '/');
+
+    let powershellDirectory =  path.join(directoryPath, 'v2')
+    powershellDirectory = powershellDirectory.replace(/\\/g, '/');
+    if(!fs.existsSync(powershellDirectory)){
+      console.log(powershellDirectory)
+      return false
+    }
+
+
     await new Promise(async (resolve, reject) => {
       try {
         const pipePath = '\\\\.\\pipe\\frigid';  // Correctly formatted pipe path for Windows
@@ -105,7 +118,6 @@ const changeDNSWindows = async () => {
         });
     
         client.on('data', (data) => {
-          console.log(data.toString())
             if(data.toString() == 'Dns Set'){
               client.end()
               resolve()
@@ -298,43 +310,50 @@ export const createDNSControllerMac = async () => {
 export const createDNSControllerTask = async () => {
   try {
     const userPath = app.getPath('userData')
-    let directoryPath = path.join(userPath, 'Frigid', 'DNSController')
+    let directoryPath = path.join(userPath, 'Frigid', 'DNSController', 'v2')
+    let oldDirectoryPath = path.join(userPath, 'Frigid', 'DNSController')
     await ensureDir(directoryPath)
     directoryPath = directoryPath.replace(/\\/g, '/');
 
     let powershellDirectory =  path.join(directoryPath, 'Frigid_DNS_Controller.exe')
     powershellDirectory = powershellDirectory.replace(/\\/g, '/');
 
+    let oldExePath =  path.join(oldDirectoryPath, 'Frigid_DNS_Controller.exe')
+
     const powershellScript = fs.readFileSync(path.join(root, 'assets', 'dnsManagement', 'Frigid_DNS_Controller.exe'))
     fs.writeFileSync(powershellDirectory, powershellScript)
 
     const psScript = `
-   $taskName = "Frigid_DNS_Controller";
-$exePath = "${powershellDirectory}";
-$startInPath = "${directoryPath}";
+    $taskName = "Frigid_DNS_Controller";
+    $exePath = "${powershellDirectory}";
+    $startInPath = "${directoryPath}";
 
-Stop-Process -Name "Frigid_DNS_Controller" -Force -ErrorAction SilentlyContinue;
-if (Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue) {
-    Unregister-ScheduledTask -TaskName $taskName -Confirm:$false;
-}
+    icacls "$exePath" /reset | Out-Null; icacls "$exePath" /grant "BUILTIN\\Administrators:(RX)" /grant "NT AUTHORITY\\SYSTEM:(RX)" /inheritance:r | Out-Null;
 
-$action = New-ScheduledTaskAction -Execute $exePath -WorkingDirectory $startInPath;
-$trigger = New-ScheduledTaskTrigger -AtLogOn;
-$principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest;
-
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries;
-
-Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force;
-
-Start-ScheduledTask -TaskName $taskName;
+    Stop-Process -Name "Frigid_DNS_Controller" -Force -ErrorAction SilentlyContinue;
+    if (Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue) {
+        Unregister-ScheduledTask -TaskName $taskName -Confirm:$false;
+    }
 
 
+    $action = New-ScheduledTaskAction -Execute $exePath -WorkingDirectory $startInPath;
+    $trigger = New-ScheduledTaskTrigger -AtLogOn;
+    $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest;
 
-  `;
+    $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries;
+
+    Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force;
+
+    Start-ScheduledTask -TaskName $taskName;
+`;
   
   const formattedPsScript = psScript.replace(/(\r\n|\n|\r)/gm, " ").replace(/"/g, '\\"');
   
   const taskResults = await execute(`powershell -Command "${formattedPsScript}"`);
+
+  if(fs.existsSync(oldExePath)){
+    fs.unlinkSync(oldExePath)
+  }
   
     return true
   } catch (error) {

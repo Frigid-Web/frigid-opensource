@@ -23,7 +23,7 @@ import Permission from './permissions/permission';
 
 
 export default function App() {
-
+ 
 
 
   return (
@@ -38,7 +38,7 @@ export default function App() {
         <Routes>
 
 
-          <Route element={<ScreenRoot />} >
+          <Route  element={<ScreenRoot />} >
             <Route path="/" element={<Network />} >
               <Route path="/" element={<Permission />} />
               <Route path="/onboarding/start" element={<B_Welcome />} />
@@ -46,16 +46,16 @@ export default function App() {
               <Route path="/onboarding/dns/" element={<B_DNS />} />
               <Route path="/onboarding/complete/" element={<B_Complete />} />
             </Route>
-
-            <Route path="/more" element={<More />} />
-            <Route path="/settings" element={<Settings />} >
-              <Route path="/settings/rpcsetup/start" element={<B_RPCStart />} />
-              <Route path="/settings/rpcsetup/form" element={<B_RPCForm />} />
-              <Route path="/settings/rpcsetup/complete" element={<B_RPCComplete />} />
+          
+              <Route path="/more" element={<More />} />
+              <Route path="/settings" element={<Settings />} >
+                <Route path="/settings/rpcsetup/start" element={<B_RPCStart />} />
+                <Route path="/settings/rpcsetup/form" element={<B_RPCForm />} />
+                <Route path="/settings/rpcsetup/complete" element={<B_RPCComplete />} />
+              </Route>
+              <Route path="/apps" element={<Apps />} />
+              <Route path="/developer" element={<Developer />} />
             </Route>
-            <Route path="/apps" element={<Apps />} />
-            <Route path="/developer" element={<Developer />} />
-          </Route>
 
         </Routes>
       </Router>
