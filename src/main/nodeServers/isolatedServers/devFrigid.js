@@ -279,22 +279,30 @@ async function startProcessing(sourceDir, destDir) {
 
 const moveContentsUp = async (dir) => {
     try {
-        const files = await fs.promises.readdir(dir);
-
-        if (files.length === 1) {
-            const singleItemPath = path.join(dir, files[0]);
-            const stats = await fs.promises.stat(singleItemPath);
-
-            if (stats.isDirectory()) {
-                const innerFiles = await fs.promises.readdir(singleItemPath);
-                for (const file of innerFiles) {
-                    const srcPath = path.join(singleItemPath, file);
-                    const destPath = path.join(dir, file);
-                    await fs.promises.rename(srcPath, destPath);
+        while(true){
+            const files = await fs.promises.readdir(dir);
+            if (files.length === 1) {
+                const singleItemPath = path.join(dir, files[0]);
+                const stats = await fs.promises.stat(singleItemPath);
+    
+                if (stats.isDirectory()) {
+                    const innerFiles = await fs.promises.readdir(singleItemPath);
+                    for (const file of innerFiles) {
+                        const srcPath = path.join(singleItemPath, file);
+                        const destPath = path.join(dir, file);
+                        await fs.promises.rename(srcPath, destPath);
+                    }
+                    await fs.promises.rmdir(singleItemPath);
                 }
-                await fs.promises.rmdir(singleItemPath);
+                else{
+                    break;
+                }
+            }
+            else{
+                break;
             }
         }
+      
     } catch (error) {
         console.error('Error moving contents up:', error);
 
@@ -593,6 +601,7 @@ const publish = async (ws, data) => {
         // console.log(productionDomain)
         await processWeb3Request({ hostname: productionDomain, headers:{bypassCache:true}, path: `/${joinPath}` }, responseProduction);
         
+   
         if(error){
             return {shouldOverwrite:false, hash:null}
         }

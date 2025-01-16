@@ -327,11 +327,11 @@ export const processWeb3Request = async (req, res) => {
         res.status(404).send('Resource not found')
         return
     }
-    const cache = req?.headers?.bypassCache || false
+    const bypassCache = req?.headers?.bypassCache || false
     
     const provider = new ethers.JsonRpcProvider(network)
 
-    const origin_file = await getStarterNode(provider, appInfo, chain, host, cache)
+    const origin_file = await getStarterNode(provider, appInfo, chain, host, bypassCache)
     if(origin_file == null){
         res.status(404).send('Resource not found')
         return
@@ -356,7 +356,9 @@ export const processWeb3Request = async (req, res) => {
                    if(cacheData.hash == hash){
                        res.setHeader('Content-Type', cacheData.data.mime);
                        res.send(Buffer.from(cacheData.data.data.data));
-                
+                       if(bypassCache == true){
+                            res.setHeader('Hash', hash)
+                        }
                        return
                    }
 
@@ -392,6 +394,7 @@ export const processWeb3Request = async (req, res) => {
                                 res.statusCode = 206; // Partial Content
                                 
                                 res.send(buffer.subarray(start, end + 1));
+                                
                                return
                            }
                         }  
@@ -435,6 +438,10 @@ export const processWeb3Request = async (req, res) => {
                            if(cacheData.hash == hash){
                                res.setHeader('Content-Type', cacheData.data.mime);
                                res.send(Buffer.from(cacheData.data.data.data));
+                                if(bypassCache == true){
+                                    res.setHeader('Hash', hash)
+                                }
+
                                return
                            }
                         } 
@@ -461,6 +468,10 @@ export const processWeb3Request = async (req, res) => {
                        if(cacheData.hash == hash){
                            res.setHeader('Content-Type', cacheData.data.mime);
                            res.send(Buffer.from(cacheData.data.data.data));
+                           if(bypassCache == true){
+                            res.setHeader('Hash', hash)
+                            }
+
                            return
                        }
                     } 
@@ -486,7 +497,7 @@ export const processWeb3Request = async (req, res) => {
             if(res.websiteCacheIgnore != true){
                 websiteDataCache.setSync(host + hostPath, {hash:hash, data: fileResponse})
             }
-            if(cache == true){
+            if(bypassCache == true){
                 res.setHeader('Hash', hash)
             }
             res.send(fileResponse.data);

@@ -115,6 +115,22 @@ app.use(async (req, res, next) => {
             localFrigid(req, res, next);
             return;
         }
+        if (host == 'mediainfo.frigid' && process.env.NODE_ENV == 'development') {
+            const wasmPath = path.resolve(root, 'assets', 'MediaInfoModule.wasm');
+
+            // Ensure the correct MIME type is set for .wasm files
+            res.setHeader('Content-Type', 'application/wasm');
+
+            res.sendFile(wasmPath, (err) => {
+                if (err) {
+                    console.error('Error sending WASM file:', err);
+                    res.status(err.status).end();
+                }
+            });
+       
+      
+            return 
+        }
         if (host.includes('.preview.frigid')) {
             previewFrigid(req, res, next);
             return;
@@ -140,6 +156,7 @@ pingPongServer.use(async (req, res, next) => {
     if (req.headers.upgrade && req.headers.upgrade.toLowerCase() === 'websocket') {
         return;
     }
+
     if (domainSuffix === 'frigid') {
         if(host == 'mediainfo.frigid'){
             const wasmPath = path.resolve(root, 'assets', 'MediaInfoModule.wasm');
